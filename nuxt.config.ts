@@ -11,7 +11,8 @@ export default defineNuxtConfig({
   },
 
   tradingview: {
-    // overrideDefaults: true, // Default
+    overrideDefaults: true, // Default
+    prefix: "TV",
   },
 
   css: ["@/assets/css/main.css"],
