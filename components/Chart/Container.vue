@@ -67,9 +67,9 @@
 
     <!-- Chart Content -->
     <div class="flex-1 relative">
-      <ChartOriginalChart v-if="activeChartTab === 'Original'" />
-      <ChartTradingViewChart v-else-if="activeChartTab === 'Trading View'" />
-      <ChartDepthChart v-else-if="activeChartTab === 'Depth'" />
+      <ChartOriginal v-if="activeChartTab === 'Original'" />
+      <ChartTradingView v-else-if="activeChartTab === 'Trading View'" />
+      <ChartDepth v-else-if="activeChartTab === 'Depth'" />
     </div>
 
     <!-- Chart Info Bar -->

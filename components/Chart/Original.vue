@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { createChart, ColorType, IChartApi, ISeriesApi } from 'lightweight-charts'
+import { createChart, ColorType, type IChartApi, type ISeriesApi } from 'lightweight-charts'
 import { useMarketStore } from '~/stores/market'
 import { useBinanceStream } from '~/composables/useBinanceStream'
 

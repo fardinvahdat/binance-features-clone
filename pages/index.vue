@@ -1,11 +1,11 @@
 <template>
   <div class="h-screen flex flex-col overflow-hidden">
     <!-- Top Navigation Bar -->
-    <HeaderTopBar /> 
-    
+    <HeaderTopBar />
+
     <!-- Market Header -->
-    <HeaderMarketHeader />
-    
+    <HeaderMarket />
+
     <!-- Ticker Bar -->
     <HeaderTickerBar />
 
@@ -72,28 +72,31 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
-import { useBinanceStream } from '~/composables/useBinanceStream'
-import { useMarketStore } from '~/stores/market'
+import { onMounted, onUnmounted, watch } from "vue";
+import { useBinanceStream } from "~/composables/useBinanceStream";
+import { useMarketStore } from "~/stores/market";
 
-const { connect, disconnect } = useBinanceStream()
-const marketStore = useMarketStore()
+const { connect, disconnect } = useBinanceStream();
+const marketStore = useMarketStore();
 
 onMounted(() => {
   // Connect to WebSocket on mount
-  connect(marketStore.currentSymbol.toLowerCase())
-})
+  connect(marketStore.currentSymbol.toLowerCase());
+});
 
 // Watch for symbol changes and reconnect
-watch(() => marketStore.currentSymbol, (newSymbol) => {
-  console.log('Symbol changed to:', newSymbol)
-  // Disconnect old connection and connect with new symbol
-  disconnect()
-  connect(newSymbol.toLowerCase())
-})
+watch(
+  () => marketStore.currentSymbol,
+  (newSymbol) => {
+    console.log("Symbol changed to:", newSymbol);
+    // Disconnect old connection and connect with new symbol
+    disconnect();
+    connect(newSymbol.toLowerCase());
+  }
+);
 
 onUnmounted(() => {
   // Disconnect WebSocket on unmount
-  disconnect()
-})
+  disconnect();
+});
 </script>
