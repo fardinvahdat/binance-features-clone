@@ -67,7 +67,7 @@
 
     <!-- Chart Content -->
     <div class="flex-1 relative">
-      <ChartOriginal v-if="activeChartTab === 'Original'" />
+      <ChartTradingView v-if="activeChartTab === 'Original'" />
       <ChartTradingView v-else-if="activeChartTab === 'Trading View'" />
       <ChartDepth v-else-if="activeChartTab === 'Depth'" />
     </div>
@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import {
   TrendingUp,
@@ -104,9 +105,11 @@ import {
   Maximize2,
 } from "lucide-vue-next";
 
+const marketStore = useMarketStore();
+const { interval: selectedInterval } = storeToRefs(marketStore);
+
 const chartTabs = ["Original", "Trading View", "Depth"];
 const activeChartTab = ref("Original");
 
-const timeIntervals = ["15m", "1H", "4H", "1D", "1W"];
-const selectedInterval = ref("1D");
+const timeIntervals = ["1M", "30M", "1H", "4H", "1D", "1W"];
 </script>

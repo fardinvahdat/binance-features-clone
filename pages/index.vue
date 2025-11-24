@@ -3,16 +3,16 @@
     <!-- Top Navigation Bar -->
     <HeaderTopBar />
 
-    <!-- Market Header -->
-    <HeaderMarket />
-
-    <!-- Ticker Bar -->
-    <HeaderTickerBar />
-
     <!-- Main Content Area -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Left Side: Chart + Bottom Tabs -->
       <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Ticker Bar -->
+        <HeaderTickerBar />
+        
+        <!-- Market Header -->
+        <HeaderMarket />
+
         <!-- Chart Area -->
         <div class="flex-1 overflow-hidden p-2">
           <ChartContainer />
