@@ -49,6 +49,15 @@ export const useMarketStore = defineStore("market", {
     fundingRate: 0,
     nextFundingTime: "",
     interval: "1H",
+    tickers: {} as Record<
+      string,
+      {
+        symbol: string;
+        price: number;
+        changePercent: number;
+        volume: number;
+      }
+    >,
   }),
 
   getters: {
@@ -184,6 +193,27 @@ export const useMarketStore = defineStore("market", {
 
     setKlines(klines: Kline[]) {
       this.klines = klines;
+    },
+
+    connectTickers() {
+      const ws = new WebSocket(
+        "wss://fstream.binance.com/stream?streams=!ticker@arr"
+      );
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (!data.data) return;
+
+        for (const t of data.data) {
+          this.tickers[t.s] = {
+            symbol: t.s,
+            price: Number(t.c),
+            changePercent: Number(t.P),
+            volume: Number(t.v),
+          };
+        }
+      };
     },
   },
 });

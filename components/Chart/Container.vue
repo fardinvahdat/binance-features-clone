@@ -146,7 +146,6 @@ const marketStore = useMarketStore();
 const { interval: selectedInterval } = storeToRefs(marketStore);
 const ma = computed(() => marketStore.movingAverages);
 const stats = computed(() => marketStore.chartStats);
-console.log(marketStore.klines[marketStore.klines.length - 1]);
 
 
 

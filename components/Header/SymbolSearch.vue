@@ -138,19 +138,18 @@ const searchQuery = ref('')
 const activeTab = ref('Favorites')
 const tabs = ['Favorites', 'USDT-M', 'COIN-M']
 
-// Mock data - in real app, this would come from the market store
-const usdtSymbols = ref<SymbolData[]>([
-  { symbol: 'BTCUSDT', price: '83,545.9', change: 1.04, volume: '19.23B', isFavorite: true },
-  { symbol: 'ETHUSDT', price: '2,705.84', change: -0.02, volume: '8.45B', isFavorite: true },
-  { symbol: 'BNBUSDT', price: '819.69', change: 0.49, volume: '1.23B', isFavorite: true },
-  { symbol: 'SOLUSDT', price: '245.32', change: 2.15, volume: '2.34B', isFavorite: false },
-  { symbol: 'XRPUSDT', price: '1.18', change: -1.23, volume: '3.45B', isFavorite: false },
-  { symbol: 'ADAUSDT', price: '0.89', change: 0.67, volume: '890M', isFavorite: false },
-  { symbol: 'DOGEUSDT', price: '0.32', change: 1.89, volume: '1.23B', isFavorite: false },
-  { symbol: 'DOTUSDT', price: '7.45', change: -0.45, volume: '456M', isFavorite: false },
-  { symbol: 'MATICUSDT', price: '0.67', change: 0.89, volume: '678M', isFavorite: false },
-  { symbol: 'AVAXUSDT', price: '38.90', change: 1.23, volume: '789M', isFavorite: false },
-])
+const usdtSymbols = computed(() => {
+  return Object.values(marketStore.tickers)
+    .filter(t => t.symbol.endsWith("USDT"))
+    .map(t => ({
+      symbol: t.symbol,
+      price: t.price.toFixed(2),
+      change: t.changePercent,
+      volume: t.volume,
+      isFavorite: false
+    }))
+})
+
 
 const filteredFavorites = computed(() => {
   const favorites = usdtSymbols.value.filter(s => s.isFavorite)

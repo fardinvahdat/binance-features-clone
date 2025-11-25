@@ -12,7 +12,7 @@
         <div>
           <div class="flex items-center gap-1">
             <span class="text-text-primary font-semibold">{{ marketStore.currentSymbol }}</span>
-            <span class="text-text-secondary text-xs">Perp</span>
+            <!-- <span class="text-text-secondary text-xs">Perp</span> -->
             <ChevronDown :size="14" class="text-text-secondary" />
           </div>
         </div>
@@ -68,10 +68,7 @@
           <div class="text-text-secondary">24h Volume(USDT)</div>
           <div class="text-text-primary">{{ marketStore.quoteVolume24h }}</div>
         </div>
-        <div>
-          <div class="text-text-secondary">Open Int</div>
-          <div class="text-text-primary">150,365.07</div>
-        </div>
+        
       </div>
     </div>
 
@@ -130,15 +127,9 @@ const fundingRateClass = computed(() => {
   return 'text-binance-green'
 })
 
-const high24h = computed(() => {
-  return marketStore.ticker24h?.highPrice 
-    ? parseFloat(marketStore.ticker24h.highPrice).toFixed(2)
-    : '0.00'
-})
+const ticker = computed(() => marketStore.tickers[marketStore.currentSymbol])
 
-const low24h = computed(() => {
-  return marketStore.ticker24h?.lowPrice 
-    ? parseFloat(marketStore.ticker24h.lowPrice).toFixed(2)
-    : '0.00'
-})
+const high24h = computed(() => ticker.value?.highPrice ?? 0)
+const low24h = computed(() => ticker.value?.lowPrice ?? 0)
+const volume24h = computed(() => ticker.value?.volume ?? 0)
 </script>

@@ -94,22 +94,25 @@ onMounted(async () => {
     marketStore.currentSymbol.toLowerCase(),
     interval.value.toLocaleLowerCase()
   );
+  marketStore.connectTickers()
 });
 
 // Watch for symbol changes and reconnect
 watch(
-  () => marketStore.currentSymbol,
-  (newSymbol) => {
-    console.log("Symbol changed to:", newSymbol);
-    // Disconnect old connection and connect with new symbol
+  [() => marketStore.currentSymbol, () => marketStore.interval],
+  ([newSymbol, newInterval], [oldSymbol, oldInterval]) => {
+    console.log("Symbol or interval changed:", newSymbol, newInterval);
+
     disconnect();
-    connect(newSymbol.toLowerCase(), interval.value.toLocaleLowerCase());
+
+    connect(newSymbol.toLowerCase(), newInterval.toLowerCase());
     fetchInitialKlines(
       newSymbol.toLowerCase(),
-      interval.value.toLocaleLowerCase()
+      newInterval.toLowerCase()
     );
   }
 );
+
 
 onUnmounted(() => {
   // Disconnect WebSocket on unmount
