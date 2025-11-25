@@ -6,16 +6,16 @@
     <!-- Main Content Area -->
     <div class="flex-1 flex overflow-hidden">
       <!-- Left Side: Chart + Bottom Tabs -->
-      <div class="flex-1 flex flex-col overflow-hidden">
+      <div class="flex-1 flex flex-col overflow-auto">
         <!-- Ticker Bar -->
         <HeaderTickerBar />
-        
+
         <!-- Market Header -->
         <HeaderMarket />
 
         <!-- Chart Area -->
-        <div class="flex-1 overflow-hidden p-2">
-          <ChartContainer />
+        <div class="flex-1 flex">
+          <ChartContainer class="flex-1" />
         </div>
 
         <!-- Bottom Panels (Positions, Orders, etc.) -->
@@ -72,16 +72,25 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { onMounted, onUnmounted, watch } from "vue";
 import { useBinanceStream } from "~/composables/useBinanceStream";
 import { useMarketStore } from "~/stores/market";
 
-const { connect, disconnect } = useBinanceStream();
+const { connect, disconnect, fetchInitialKlines } = useBinanceStream();
 const marketStore = useMarketStore();
+const { interval } = storeToRefs(marketStore);
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchInitialKlines(
+    marketStore.currentSymbol.toLocaleLowerCase(),
+    interval.value.toLocaleLowerCase()
+  );
   // Connect to WebSocket on mount
-  connect(marketStore.currentSymbol.toLowerCase());
+  connect(
+    marketStore.currentSymbol.toLowerCase(),
+    interval.value.toLocaleLowerCase()
+  );
 });
 
 // Watch for symbol changes and reconnect
@@ -91,7 +100,11 @@ watch(
     console.log("Symbol changed to:", newSymbol);
     // Disconnect old connection and connect with new symbol
     disconnect();
-    connect(newSymbol.toLowerCase());
+    connect(newSymbol.toLowerCase(), interval.value.toLocaleLowerCase());
+    fetchInitialKlines(
+      newSymbol.toLowerCase(),
+      interval.value.toLocaleLowerCase()
+    );
   }
 );
 

@@ -66,10 +66,16 @@
     </div>
 
     <!-- Chart Content -->
-    <div class="flex-1 relative">
-      <ChartTradingView v-if="activeChartTab === 'Original'" />
-      <ChartTradingView v-else-if="activeChartTab === 'Trading View'" />
-      <ChartDepth v-else-if="activeChartTab === 'Depth'" />
+    <div class="flex-1 relative h-[350px]">
+      <ClientOnly>
+        <ChartTradingView v-if="activeChartTab === 'Original'" />
+        <ChartTradingView v-else-if="activeChartTab === 'Trading View'" />
+        <ChartDepth
+          v-else-if="activeChartTab === 'Depth'"
+          :bids="marketStore.bids"
+          :asks="marketStore.asks"
+        />
+      </ClientOnly>
     </div>
 
     <!-- Chart Info Bar -->

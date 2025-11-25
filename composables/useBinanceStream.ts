@@ -1,81 +1,78 @@
-import { useMarketStore } from '~/stores/market'
+import { useMarketStore } from "~/stores/market";
+import { ref, reactive } from "vue";
 
 export const useBinanceStream = () => {
-  const marketStore = useMarketStore()
-  let ws: WebSocket | null = null
-  let reconnectTimeout: NodeJS.Timeout | null = null
-  let updateBuffer: any = {
-    trades: [],
-    klines: null,
-    depth: null,
-  }
-  let flushInterval: NodeJS.Timeout | null = null
+  const marketStore = useMarketStore();
+  const ws = ref<WebSocket | null>(null);
+  const reconnectTimeout = ref<NodeJS.Timeout | null>(null);
+  const flushInterval = ref<NodeJS.Timeout | null>(null);
+  const updateBuffer = reactive({
+    trades: [] as any[],
+    klines: null as any,
+    depth: null as any,
+    latestTicker: null as any,
+    latestPrice: null as number | null,
+  });
 
-  const connect = (symbol: string = 'btcusdt') => {
-    if (ws) {
-      ws.close()
-    }
+  const connect = (symbol: string = "btcusdt", interval: string = "1m") => {
+    disconnect(); // Ensure clean start
 
     const streams = [
       `${symbol}@aggTrade`,
-      `${symbol}@kline_1m`,
+      `${symbol}@kline_${interval}`,
       `${symbol}@depth20@100ms`,
       `${symbol}@ticker`,
-    ]
+    ];
+    const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join("/")}`;
 
-    const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join('/')}`
-    
-    ws = new WebSocket(wsUrl)
+    ws.value = new WebSocket(wsUrl);
 
-    ws.onopen = () => {
-      console.log('WebSocket connected')
-      startFlushInterval()
-    }
+    ws.value.onopen = () => {
+      console.log(`WebSocket connected for ${symbol} at ${interval}`);
+      startFlushInterval();
+    };
 
-    ws.onmessage = (event) => {
+    ws.value.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
-        handleMessage(data)
+        const data = JSON.parse(event.data);
+        if (data.data) {
+          handleMessage(data.data);
+        }
       } catch (error) {
-        console.error('WebSocket message error:', error)
+        console.error("WebSocket message parsing error:", error);
       }
-    }
+    };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
-    }
+    ws.value.onerror = (error) => {
+      console.error("WebSocket connection error:", error);
+    };
 
-    ws.onclose = () => {
-      console.log('WebSocket closed')
-      stopFlushInterval()
-      // Attempt to reconnect after 3 seconds
-      reconnectTimeout = setTimeout(() => {
-        connect(symbol)
-      }, 3000)
-    }
-  }
+    ws.value.onclose = () => {
+      console.log("WebSocket connection closed");
+      stopFlushInterval();
+      reconnectTimeout.value = setTimeout(
+        () => connect(symbol, interval),
+        3000
+      );
+    };
+  };
 
-  const handleMessage = (data: any) => {
-    if (!data.data) return
-
-    const { e: eventType, s: symbol } = data.data
+  const handleMessage = (messageData: any) => {
+    const { e: eventType } = messageData;
 
     switch (eventType) {
-      case 'aggTrade':
-        // Buffer trade data
+      case "aggTrade":
         updateBuffer.trades.push({
-          price: parseFloat(data.data.p),
-          amount: parseFloat(data.data.q),
-          time: new Date(data.data.T).toLocaleTimeString(),
-          isBuyerMaker: data.data.m,
-        })
-        // Update price immediately for responsiveness
-        marketStore.updatePrice(parseFloat(data.data.p))
-        break
+          price: parseFloat(messageData.p),
+          amount: parseFloat(messageData.q),
+          time: new Date(messageData.T).toLocaleTimeString(),
+          isBuyerMaker: messageData.m,
+        });
+        updateBuffer.latestPrice = parseFloat(messageData.p);
+        break;
 
-      case 'kline':
-        // Buffer kline data
-        const kline = data.data.k
+      case "kline":
+        const kline = messageData.k;
         updateBuffer.klines = {
           time: kline.t / 1000,
           open: parseFloat(kline.o),
@@ -83,110 +80,130 @@ export const useBinanceStream = () => {
           low: parseFloat(kline.l),
           close: parseFloat(kline.c),
           volume: parseFloat(kline.v),
-        }
-        break
+        };
+        updateBuffer.latestPrice = parseFloat(kline.c);
+        break;
 
-      case 'depthUpdate':
-        // Buffer depth data
+      case "depthUpdate":
         updateBuffer.depth = {
-          bids: data.data.b.map((b: any) => [parseFloat(b[0]), parseFloat(b[1])]),
-          asks: data.data.a.map((a: any) => [parseFloat(a[0]), parseFloat(a[1])]),
-        }
-        break
+          bids: messageData.b.map((b: any) => [
+            parseFloat(b[0]),
+            parseFloat(b[1]),
+          ]),
+          asks: messageData.a.map((a: any) => [
+            parseFloat(a[0]),
+            parseFloat(a[1]),
+          ]),
+        };
+        break;
 
-      case '24hrTicker':
-        // Update ticker immediately
-        marketStore.updateTicker({
-          symbol: data.data.s,
-          priceChange: data.data.p,
-          priceChangePercent: data.data.P,
-          lastPrice: data.data.c,
-          volume: data.data.v,
-          quoteVolume: data.data.q,
-          openPrice: data.data.o,
-          highPrice: data.data.h,
-          lowPrice: data.data.l,
-        })
-        break
+      case "24hrTicker":
+        updateBuffer.latestTicker = {
+          symbol: messageData.s,
+          priceChange: messageData.p,
+          priceChangePercent: messageData.P,
+          lastPrice: messageData.c,
+          volume: messageData.v,
+          quoteVolume: messageData.q,
+          openPrice: messageData.o,
+          highPrice: messageData.h,
+          lowPrice: messageData.l,
+        };
+        updateBuffer.latestPrice = parseFloat(messageData.c);
+        break;
     }
-  }
+  };
 
   const startFlushInterval = () => {
-    // Flush buffered data to store every 500ms (2 times per second)
-    flushInterval = setInterval(() => {
-      flushBuffer()
-    }, 500)
-  }
+    flushInterval.value = setInterval(flushBuffer, 1000);
+  };
 
   const stopFlushInterval = () => {
-    if (flushInterval) {
-      clearInterval(flushInterval)
-      flushInterval = null
+    if (flushInterval.value) {
+      clearInterval(flushInterval.value);
+      flushInterval.value = null;
     }
-  }
+  };
 
   const flushBuffer = () => {
-    // Flush trades
+    if (updateBuffer.latestPrice !== null) {
+      marketStore.updatePrice(updateBuffer.latestPrice);
+      updateBuffer.latestPrice = null;
+    }
+
     if (updateBuffer.trades.length > 0) {
-      updateBuffer.trades.forEach((trade: any) => {
-        marketStore.addTrade(trade)
-      })
-      updateBuffer.trades = []
+      updateBuffer.trades.forEach((trade: any) => marketStore.addTrade(trade));
+      updateBuffer.trades = [];
     }
 
-    // Flush kline
     if (updateBuffer.klines) {
-      marketStore.updateKline(updateBuffer.klines)
-      updateBuffer.klines = null
+      marketStore.updateKline(updateBuffer.klines);
+      updateBuffer.klines = null;
     }
 
-    // Flush depth
     if (updateBuffer.depth) {
-      marketStore.updateOrderBook(updateBuffer.depth.bids, updateBuffer.depth.asks)
-      updateBuffer.depth = null
+      marketStore.updateOrderBook(
+        updateBuffer.depth.bids,
+        updateBuffer.depth.asks
+      );
+      updateBuffer.depth = null;
     }
-  }
+
+    if (updateBuffer.latestTicker) {
+      marketStore.updateTicker(updateBuffer.latestTicker);
+      updateBuffer.latestTicker = null;
+    }
+  };
 
   const disconnect = () => {
-    if (ws) {
-      ws.close()
-      ws = null
+    if (ws.value) {
+      ws.value.close();
+      ws.value = null;
     }
-    if (reconnectTimeout) {
-      clearTimeout(reconnectTimeout)
-      reconnectTimeout = null
+    if (reconnectTimeout.value) {
+      clearTimeout(reconnectTimeout.value);
+      reconnectTimeout.value = null;
     }
-    stopFlushInterval()
-  }
+    stopFlushInterval();
+  };
 
-  // Fetch initial kline data
-  const fetchInitialKlines = async (symbol: string = 'BTCUSDT', interval: string = '1m', limit: number = 1000) => {
-    try {
-      const response = await fetch(
-        `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
-      )
-      const data = await response.json()
-      
-      const klines = data.map((k: any) => ({
-        time: k[0] / 1000,
-        open: parseFloat(k[1]),
-        high: parseFloat(k[2]),
-        low: parseFloat(k[3]),
-        close: parseFloat(k[4]),
-        volume: parseFloat(k[5]),
-      }))
-      
-      marketStore.setKlines(klines)
-      return klines
-    } catch (error) {
-      console.error('Error fetching initial klines:', error)
-      return []
+const fetchInitialKlines = async (
+  symbol: string = "btcusdt",
+  interval: string = "1m",
+  limit: number = 1000
+) => {
+  try {
+    const proxyUrl = `/api/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) {
+      const text = await response.text(); // Get raw text for debugging
+      console.error("Proxy response not OK:", response.status, text);
+      throw new Error(`Proxy error: ${response.status} - ${text}`);
     }
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(`API error: ${data.error}`);
+    }
+
+    const klines = data.map((k: any) => ({
+      time: k[0] / 1000,
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4]),
+      volume: parseFloat(k[5]),
+    }));
+    marketStore.setKlines(klines);
+    return klines;
+  } catch (error) {
+    console.error("Error fetching initial klines:", error);
+    return [];
   }
+};
 
   return {
     connect,
     disconnect,
     fetchInitialKlines,
-  }
-}
+  };
+};

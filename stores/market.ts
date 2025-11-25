@@ -48,7 +48,7 @@ export const useMarketStore = defineStore("market", {
     indexPrice: 0,
     fundingRate: 0,
     nextFundingTime: "",
-    interval: "H",
+    interval: "1H",
   }),
 
   getters: {
@@ -57,7 +57,7 @@ export const useMarketStore = defineStore("market", {
       return parseFloat(state.ticker24h.priceChangePercent).toFixed(2);
     },
 
-    isPriceUp: (state) => state.currentPrice > state.prevPrice,
+    isPriceUp: (state) => state.currentPrice >= state.prevPrice,
     isPriceDown: (state) => state.currentPrice < state.prevPrice,
 
     formattedPrice: (state) => {
