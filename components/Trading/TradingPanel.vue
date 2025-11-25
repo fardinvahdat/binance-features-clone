@@ -6,25 +6,25 @@
         v-for="mode in tradingModes" 
         :key="mode"
         @click="selectedMode = mode"
-        class="px-3 py-1 text-sm rounded"
+        class="px-3 py-1 text-xs rounded"
         :class="selectedMode === mode 
           ? 'bg-bg-hover text-text-primary' 
           : 'text-text-secondary hover:text-text-primary'"
       >
         {{ mode }}
       </button>
-      <button class="px-3 py-1 text-sm text-text-secondary hover:text-text-primary rounded">
+      <button class="px-3 py-1 text-xs text-text-secondary hover:text-text-primary rounded">
         S
       </button>
     </div>
 
     <!-- Order Type Tabs -->
-    <div class="flex items-center border-b border-border-color">
+    <div class="flex items-center border-b border-border-color overflow-x-auto">
       <button 
         v-for="type in orderTypes" 
         :key="type"
         @click="selectedOrderType = type"
-        class="px-4 py-2 text-sm border-b-2 transition-colors"
+        class="px-4 py-2 text-[10px] border-b-2 transition-colors"
         :class="selectedOrderType === type 
           ? 'border-binance-yellow text-text-primary' 
           : 'border-transparent text-text-secondary hover:text-text-primary'"
@@ -60,7 +60,7 @@
             value="83,682.7"
             class="flex-1 bg-transparent text-text-primary outline-none text-sm"
           />
-          <span class="text-text-secondary text-xs ml-2">USDT</span>
+          <span class="text-text-secondary text-xs mr-2">USDT</span>
           <button class="ml-2 px-2 py-0.5 bg-bg-hover text-text-primary text-xs rounded">
             BBO
           </button>
@@ -76,7 +76,7 @@
             placeholder="0"
             class="flex-1 bg-transparent text-text-primary outline-none text-sm"
           />
-          <span class="text-text-secondary text-xs ml-2">BTC</span>
+          <span class="text-text-secondary text-xs mr-2">BTC</span>
           <ChevronDown :size="14" class="text-text-secondary ml-1" />
         </div>
       </div>
@@ -101,10 +101,10 @@
 
       <!-- Action Buttons -->
       <div class="space-y-2">
-        <button class="w-full py-3 bg-binance-yellow text-bg-primary font-semibold rounded hover:opacity-90 transition-opacity">
+        <button class="w-full py-3 bg-binance-yellow text-bg-primary text-sm font-semibold rounded hover:opacity-90 transition-opacity">
           Register Now
         </button>
-        <button class="w-full py-3 bg-bg-hover text-text-primary font-semibold rounded hover:bg-border-color transition-colors">
+        <button class="w-full py-3 bg-bg-hover text-text-primary text-sm font-semibold rounded hover:bg-border-color transition-colors">
           Log In
         </button>
       </div>

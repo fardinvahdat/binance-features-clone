@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-bg-panel px-4 py-2 flex items-center justify-between border-b border-border-color">
+  <div class="bg-bg-panel px-4 py-1 flex items-center justify-between border-b border-border-color">
     <div class="flex items-center gap-6">
       <!-- Symbol Selector -->
       <div 
@@ -30,19 +30,18 @@
       </div>
 
       <!-- Market Info -->
-      <div class="flex items-center gap-6 text-xs">
+      <div class="flex items-center gap-6 text-[10px]">
         <div>
-          <div class="text-text-secondary">Mark Price</div>
+          <div class="text-text-secondary text-nowrap">Mark Price</div>
           <div class="text-text-primary">{{ marketStore.formattedPrice }}</div>
         </div>
         <div>
-          <div class="text-text-secondary">Index Price</div>
+          <div class="text-text-secondary text-nowrap">Index Price</div>
           <div class="text-text-primary">{{ marketStore.formattedPrice }}</div>
         </div>
         <div>
           <div class="text-text-secondary flex items-center gap-1">
             Funding / Countdown
-            <Info :size="12" />
           </div>
           <div class="flex items-center gap-1">
             <span 
@@ -51,7 +50,6 @@
             >
               {{ formattedFundingRate }}
             </span>
-            <span class="text-text-secondary">/ 06:23:28</span>
           </div>
         </div>
         <div>

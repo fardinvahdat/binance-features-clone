@@ -4,9 +4,9 @@
     <HeaderTopBar />
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 grid overflow-hidden grid-cols-4">
       <!-- Left Side: Chart + Bottom Tabs -->
-      <div class="flex-1 flex flex-col overflow-auto">
+      <div class="flex-1 flex flex-col overflow-auto col-span-3">
         <!-- Ticker Bar -->
         <HeaderTickerBar />
 
@@ -25,25 +25,28 @@
       </div>
 
       <!-- Right Side Panels -->
-      <div class="w-96 flex flex-col gap-2 p-2 overflow-auto">
+      <div class="col-span-1 grid grid-cols-2 gap-2 p-2 overflow-auto">
         <!-- Order Book -->
-        <div class="flex-1 min-h-full">
-          <OrderBookPanel />
+        <div>
+          <div class="flex-1 min-h-full">
+            <OrderBookPanel />
+          </div>
         </div>
+        <div>
+          <!-- Trading Panel -->
+          <div class="h-auto">
+            <TradingPanel />
+          </div>
 
-        <!-- Trading Panel -->
-        <div class="h-auto">
-          <TradingPanel />
-        </div>
+          <!-- Trades -->
+          <div class="h-64">
+            <OrderBookTradesPanel />
+          </div>
 
-        <!-- Trades -->
-        <div class="h-64">
-          <OrderBookTradesPanel />
-        </div>
-
-        <!-- Account Panel -->
-        <div class="h-auto">
-          <TradingAccountPanel />
+          <!-- Account Panel -->
+          <div class="h-auto">
+            <TradingAccountPanel />
+          </div>
         </div>
       </div>
     </div>
