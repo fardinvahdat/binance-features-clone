@@ -85,20 +85,46 @@
 
     <!-- Chart Info Bar -->
     <div class="border-t border-border-color px-4 py-1.5 text-xs">
-      <div class="flex items-center gap-4 text-text-secondary">
+      <div class="flex items-center gap-4 text-text-secondary" v-if="stats">
         <span
-          >2025/11/21 Open: <span class="text-text-primary">480.19</span></span
+          >{{ stats.date }} Open:
+          <span class="text-text-primary">{{ stats.open }}</span></span
         >
-        <span>High: <span class="text-text-primary">514.67</span></span>
-        <span>Low: <span class="text-text-primary">446.45</span></span>
-        <span>Close: <span class="text-text-primary">512.93</span></span>
-        <span>CHANGE: <span class="text-binance-green">6.81%</span></span>
-        <span>Range: <span class="text-text-primary">14.20%</span></span>
-        <span class="ml-auto"
-          >MA(7): <span class="text-[#8B5CF6]">496.77</span></span
+        <span
+          >High: <span class="text-text-primary">{{ stats.high }}</span></span
         >
-        <span>MA(25): <span class="text-[#F59E0B]">509.18</span></span>
-        <span>MA(99): <span class="text-[#3B82F6]">547.68</span></span>
+        <span
+          >Low: <span class="text-text-primary">{{ stats.low }}</span></span
+        >
+        <span
+          >Close: <span class="text-text-primary">{{ stats.close }}</span></span
+        >
+
+        <span>
+          CHANGE:
+          <span
+            :class="
+              stats.change >= 0 ? 'text-binance-green' : 'text-binance-red'
+            "
+          >
+            {{ stats.change.toFixed(2) }}%
+          </span>
+        </span>
+
+        <span>
+          Range:
+          <span class="text-text-primary">{{ stats.range.toFixed(2) }}%</span>
+        </span>
+
+        <span class="ml-auto">
+          MA(7): <span class="text-[#8B5CF6]">{{ ma.ma7?.toFixed(2) }}</span>
+        </span>
+        <span>
+          MA(25): <span class="text-[#F59E0B]">{{ ma.ma25?.toFixed(2) }}</span>
+        </span>
+        <span>
+          MA(99): <span class="text-[#3B82F6]">{{ ma.ma99?.toFixed(2) }}</span>
+        </span>
       </div>
     </div>
   </div>
@@ -118,6 +144,11 @@ import {
 
 const marketStore = useMarketStore();
 const { interval: selectedInterval } = storeToRefs(marketStore);
+const ma = computed(() => marketStore.movingAverages);
+const stats = computed(() => marketStore.chartStats);
+console.log(marketStore.klines[marketStore.klines.length - 1]);
+
+
 
 const chartTabs = ["Original", "Trading View", "Depth"];
 const activeChartTab = ref("Original");

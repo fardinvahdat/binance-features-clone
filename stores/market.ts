@@ -43,7 +43,7 @@ export const useMarketStore = defineStore("market", {
     bids: [] as OrderBookLevel[],
     asks: [] as OrderBookLevel[],
     recentTrades: [] as Trade[],
-    klines: [] as Kline[],
+    klines: [] as any[],
     markPrice: 0,
     indexPrice: 0,
     fundingRate: 0,
@@ -66,12 +66,58 @@ export const useMarketStore = defineStore("market", {
 
     volume24h: (state) => {
       if (!state.ticker24h) return "0";
-      return parseFloat(state.ticker24h.volume).toLocaleString();
+      return parseFloat(state.ticker24h.volume).toString();
     },
 
     quoteVolume24h: (state) => {
       if (!state.ticker24h) return "0";
-      return parseFloat(state.ticker24h.quoteVolume).toLocaleString();
+      return parseFloat(state.ticker24h.quoteVolume).toString();
+    },
+
+    lastCandle: (state) =>
+      state.klines.length ? state.klines[state.klines.length - 1] : null,
+
+    chartStats: (state) => {
+      if (!state.klines.length) return null;
+
+      const last = state.klines[state.klines.length - 1];
+
+      const time = last.time * 1000; // convert seconds → ms
+      const open = Number(last.open);
+      const high = Number(last.high);
+      const low = Number(last.low);
+      const close = Number(last.close);
+
+      const change = ((close - open) / open) * 100;
+      const range = ((high - low) / low) * 100;
+
+      return {
+        date: new Date(time).toDateString(),
+        open,
+        high,
+        low,
+        close,
+        change,
+        range,
+      };
+    },
+
+    movingAverages: (state) => {
+      const ma = (length: number) => {
+        if (state.klines.length < length) return null;
+
+        const slice = state.klines.slice(-length);
+        const avg =
+          slice.reduce((sum, k) => sum + Number(k.close), 0) / slice.length;
+
+        return avg;
+      };
+
+      return {
+        ma7: ma(7),
+        ma25: ma(25),
+        ma99: ma(99),
+      };
     },
   },
 
