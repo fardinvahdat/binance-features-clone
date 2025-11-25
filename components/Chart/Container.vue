@@ -66,10 +66,15 @@
     </div>
 
     <!-- Chart Content -->
-    <div class="flex-1 relative h-[350px]">
+    <div class="flex-1 relative min-h-[400px]">
       <ClientOnly>
-        <ChartTradingView v-if="activeChartTab === 'Original'" />
-        <ChartTradingView v-else-if="activeChartTab === 'Trading View'" />
+        <ChartOriginal v-if="activeChartTab === 'Original'" />
+        <div
+          v-else-if="activeChartTab === 'Trading View'"
+          class="h-full w-full flex items-center justify-center"
+        >
+          it required api key from tradingview to work with!
+        </div>
         <ChartDepth
           v-else-if="activeChartTab === 'Depth'"
           :bids="marketStore.bids"
