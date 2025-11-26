@@ -34,6 +34,33 @@ export interface Kline {
   volume: number;
 }
 
+export interface TradingRules {
+  symbol: string;
+  status: string; // e.g., 'TRADING'
+  baseAsset: string;
+  quoteAsset: string;
+  contractType: string; // e.g., 'PERPETUAL'
+
+  // Price Rules (from PRICE_FILTER)
+  pricePrecision: number;
+  tickSize: number;
+  minPrice: number;
+  maxPrice: number;
+
+  // Quantity Rules (from LOT_SIZE and MARKET_LOT_SIZE)
+  quantityPrecision: number;
+  stepSize: number;
+  minQty: number;
+  maxQty: number;
+
+  // Notional Rules (from MIN_NOTIONAL)
+  minNotional: number;
+
+  // Order Limits
+  maxNumOrders: number;
+  maxNumAlgoOrders: number;
+}
+
 export const useMarketStore = defineStore("market", {
   state: () => ({
     currentSymbol: "BTCUSDT",
@@ -58,6 +85,15 @@ export const useMarketStore = defineStore("market", {
         volume: number;
       }
     >,
+    fundingHistory: [] as {
+      time: string;
+      interval: string;
+      rate: number;
+      markPrice: number;
+    }[],
+    tradingRules: null as TradingRules | null,
+    leverageTiers: [] as any[], // For Leverage & Margin data
+    coinInfo: null as any, // For Coin Info data
   }),
 
   getters: {

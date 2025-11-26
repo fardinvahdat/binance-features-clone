@@ -13,9 +13,34 @@
         <!-- Market Header -->
         <HeaderMarket />
 
+        <!-- Tabs -->
+
+        <div
+          class="flex items-center border-b border-border-color overflow-x-auto text-base"
+        >
+          <button
+            v-for="type in types"
+            :key="type"
+            @click="selectedType = type"
+            class="px-4 py-2 font-medium text-sm border-b-2 transition-colors"
+            :class="
+              selectedType === type
+                ? 'border-binance-yellow text-text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+            "
+          >
+            {{ type }}
+          </button>
+        </div>
+
         <!-- Chart Area -->
-        <div class="flex-1 flex">
+        <div class="flex-1 flex" v-if="selectedType=='Chart'">
           <ChartContainer class="flex-1" />
+        </div>
+
+        <!-- Chart Area -->
+        <div class="flex-1 flex" v-if="selectedType=='Info'">
+          <TradingDataInfoPanel class="flex-1" />
         </div>
 
         <!-- Bottom Panels (Positions, Orders, etc.) -->
@@ -78,44 +103,51 @@
 import { storeToRefs } from "pinia";
 import { onMounted, onUnmounted, watch } from "vue";
 import { useBinanceStream } from "~/composables/useBinanceStream";
+import { useBinanceInfo } from "~/composables/useBinanceInfo"; // <-- New Import
 import { useMarketStore } from "~/stores/market";
 
 const { connect, disconnect, fetchInitialKlines } = useBinanceStream();
+const { fetchExchangeInfo } = useBinanceInfo(); // <-- Destructure new composable
 const marketStore = useMarketStore();
 const { interval } = storeToRefs(marketStore);
+const types = ["Chart", "Info", "Trading Data"];
+const selectedType = ref("Chart");
+
+const initData = async (symbol: string, interval: string) => {
+  const lowerSymbol = symbol.toLowerCase();
+  const lowerInterval = interval.toLowerCase();
+  
+  // 1. Fetch historical klines
+  await fetchInitialKlines(lowerSymbol, lowerInterval);
+  
+  // 2. Fetch static/info data (Trading Rules, etc.)
+  await fetchExchangeInfo(symbol); // Use original symbol (e.g., 'BTCUSDT')
+  // NOTE: You would add calls for fetchFundingRateHistory, fetchLeverageTiers here
+  
+  // 3. Connect to WebSocket
+  connect(lowerSymbol, lowerInterval);
+}
 
 onMounted(async () => {
-  await fetchInitialKlines(
-    marketStore.currentSymbol.toLocaleLowerCase(),
-    interval.value.toLocaleLowerCase()
-  );
-  // Connect to WebSocket on mount
-  connect(
-    marketStore.currentSymbol.toLowerCase(),
-    interval.value.toLocaleLowerCase()
-  );
-  marketStore.connectTickers()
+  // Initial data load on mount
+  await initData(marketStore.currentSymbol, interval.value);
+  
+  // Connect all-symbol ticker stream
+  marketStore.connectTickers();
 });
 
-// Watch for symbol changes and reconnect
+// Watch for symbol and interval changes and reconnect
 watch(
   [() => marketStore.currentSymbol, () => marketStore.interval],
   ([newSymbol, newInterval], [oldSymbol, oldInterval]) => {
     console.log("Symbol or interval changed:", newSymbol, newInterval);
 
-    disconnect();
-
-    connect(newSymbol.toLowerCase(), newInterval.toLowerCase());
-    fetchInitialKlines(
-      newSymbol.toLowerCase(),
-      newInterval.toLowerCase()
-    );
+    disconnect(); // Disconnect old stream
+    initData(newSymbol, newInterval); // Load new data and reconnect
   }
 );
 
-
 onUnmounted(() => {
-  // Disconnect WebSocket on unmount
   disconnect();
 });
 </script>

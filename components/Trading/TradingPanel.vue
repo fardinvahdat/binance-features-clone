@@ -31,13 +31,6 @@
       >
         {{ type }}
       </button>
-      <div class="flex-1"></div>
-      <button class="p-2 text-text-secondary hover:text-text-primary mr-2">
-        <ChevronDown :size="14" />
-      </button>
-      <button class="p-2 text-text-secondary hover:text-text-primary mr-2">
-        <Info :size="14" />
-      </button>
     </div>
 
     <!-- Trading Form -->
