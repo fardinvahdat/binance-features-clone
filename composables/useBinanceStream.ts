@@ -21,7 +21,7 @@ export const useBinanceStream = () => {
       `${symbol}@aggTrade`,
       `${symbol}@kline_${interval}`,
       `${symbol}@depth20@100ms`,
-      `${symbol}@ticker`,
+      `${symbol}@markPrice@1s`,
     ];
     const wsUrl = `wss://fstream.binance.com/stream?streams=${streams.join("/")}`;
 
@@ -111,6 +111,15 @@ export const useBinanceStream = () => {
         };
         updateBuffer.latestPrice = parseFloat(messageData.c);
         break;
+      case "markPriceUpdate":
+        const eventData = messageData.data || messageData;
+        const eventType = eventData.e;
+        marketStore.updateFundingData({
+          markPrice: parseFloat(eventData.p), // Mark Price
+          indexPrice: parseFloat(eventData.i), // Index Price
+          fundingRate: parseFloat(eventData.r), // Funding Rate
+          nextFundingTime: eventData.T, // Next Funding Time (Timestamp)
+        });
     }
   };
 

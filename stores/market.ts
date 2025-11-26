@@ -61,6 +61,12 @@ export interface TradingRules {
   maxNumAlgoOrders: number;
 }
 
+export interface FundingHistoryItem {
+  fundingRate: number;
+  fundingTime: number; // UTC timestamp in ms
+  markPrice: number;
+}
+
 export const useMarketStore = defineStore("market", {
   state: () => ({
     currentSymbol: "BTCUSDT",
@@ -74,7 +80,7 @@ export const useMarketStore = defineStore("market", {
     markPrice: 0,
     indexPrice: 0,
     fundingRate: 0,
-    nextFundingTime: "",
+    nextFundingTime: 0,
     interval: "1H",
     tickers: {} as Record<
       string,
@@ -85,12 +91,7 @@ export const useMarketStore = defineStore("market", {
         volume: number;
       }
     >,
-    fundingHistory: [] as {
-      time: string;
-      interval: string;
-      rate: number;
-      markPrice: number;
-    }[],
+    fundingHistory: [] as FundingHistoryItem[],
     tradingRules: null as TradingRules | null,
     leverageTiers: [] as any[], // For Leverage & Margin data
     coinInfo: null as any, // For Coin Info data
@@ -250,6 +251,22 @@ export const useMarketStore = defineStore("market", {
           };
         }
       };
+    },
+
+    updateFundingData(data: {
+      markPrice: number;
+      indexPrice: number;
+      fundingRate: number;
+      nextFundingTime: number; // This is a timestamp
+    }) {
+      this.markPrice = data.markPrice;
+      this.indexPrice = data.indexPrice;
+      this.fundingRate = data.fundingRate;
+      this.nextFundingTime = data.nextFundingTime;
+    },
+
+    setFundingHistory(history: FundingHistoryItem[]) {
+      this.fundingHistory = history;
     },
   },
 });

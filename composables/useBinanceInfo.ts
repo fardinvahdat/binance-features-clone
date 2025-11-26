@@ -1,4 +1,8 @@
-import { useMarketStore, TradingRules } from "~/stores/market";
+import {
+  useMarketStore,
+  TradingRules,
+  FundingHistoryItem,
+} from "~/stores/market";
 
 // Function to safely extract symbol trading rules from Binance exchangeInfo
 const extractTradingRules = (
@@ -7,9 +11,7 @@ const extractTradingRules = (
 ): TradingRules | null => {
   if (!exchangeInfo || !exchangeInfo.symbols) return null;
 
-  const symbolData = exchangeInfo.symbols.find(
-    (s: any) => s.symbol === symbol
-  );
+  const symbolData = exchangeInfo.symbols.find((s: any) => s.symbol === symbol);
 
   if (!symbolData) return null;
 
@@ -23,7 +25,6 @@ const extractTradingRules = (
   const minNotionalFilter = getFilter("MIN_NOTIONAL");
   const maxOrdersFilter = getFilter("MAX_NUM_ORDERS");
   const maxAlgoOrdersFilter = getFilter("MAX_NUM_ALGO_ORDERS");
-
 
   return {
     symbol: symbolData.symbol,
@@ -45,13 +46,13 @@ const extractTradingRules = (
     maxQty: lotSizeFilter ? parseFloat(lotSizeFilter.maxQty) : 0,
 
     // Notional Rules
-    minNotional: minNotionalFilter
-      ? parseFloat(minNotionalFilter.notional)
-      : 0,
+    minNotional: minNotionalFilter ? parseFloat(minNotionalFilter.notional) : 0,
 
     // Order Limits
     maxNumOrders: maxOrdersFilter ? parseFloat(maxOrdersFilter.limit) : 0,
-    maxNumAlgoOrders: maxAlgoOrdersFilter ? parseFloat(maxAlgoOrdersFilter.limit) : 0,
+    maxNumAlgoOrders: maxAlgoOrdersFilter
+      ? parseFloat(maxAlgoOrdersFilter.limit)
+      : 0,
   };
 };
 
@@ -78,8 +79,35 @@ export const useBinanceInfo = () => {
       marketStore.tradingRules = null;
     }
   };
+
+  const fetchFundingRateHistory = async (
+    symbol: string,
+    limit: number = 50
+  ) => {
+    const marketStore = useMarketStore();
+    try {
+      // NOTE: We rely on a proxy route: /api/funding-history
+      const proxyUrl = `/api/funding-history?symbol=${symbol}&limit=${limit}`;
+
+      const response = await $fetch<any[]>(proxyUrl);
+
+      // Map the API response to the store's FundingHistoryItem interface
+      const history: FundingHistoryItem[] = response
+        .map((item) => ({
+          fundingRate: parseFloat(item.fundingRate),
+          fundingTime: item.fundingTime,
+          markPrice: 0, // Mark price not available in funding history API
+        }))
+        .reverse(); // Reverse to display newest last (if desired, or keep as-is)
+
+      marketStore.setFundingHistory(history);
+    } catch (error) {
+      console.error("Error fetching funding rate history:", error);
+      marketStore.setFundingHistory([]);
+    }
+  };
   return {
     fetchExchangeInfo,
-    // ... (Other returns)
+    fetchFundingRateHistory,
   };
 };

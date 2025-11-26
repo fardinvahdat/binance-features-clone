@@ -107,7 +107,7 @@ import { useBinanceInfo } from "~/composables/useBinanceInfo"; // <-- New Import
 import { useMarketStore } from "~/stores/market";
 
 const { connect, disconnect, fetchInitialKlines } = useBinanceStream();
-const { fetchExchangeInfo } = useBinanceInfo(); // <-- Destructure new composable
+const { fetchExchangeInfo, fetchFundingRateHistory } = useBinanceInfo();
 const marketStore = useMarketStore();
 const { interval } = storeToRefs(marketStore);
 const types = ["Chart", "Info", "Trading Data"];
@@ -120,19 +120,16 @@ const initData = async (symbol: string, interval: string) => {
   // 1. Fetch historical klines
   await fetchInitialKlines(lowerSymbol, lowerInterval);
   
-  // 2. Fetch static/info data (Trading Rules, etc.)
-  await fetchExchangeInfo(symbol); // Use original symbol (e.g., 'BTCUSDT')
-  // NOTE: You would add calls for fetchFundingRateHistory, fetchLeverageTiers here
-  
+  // 2. Fetch static/info data
+  await fetchExchangeInfo(symbol);
+  await fetchFundingRateHistory(symbol); // <-- Fetch historical funding data
+
   // 3. Connect to WebSocket
   connect(lowerSymbol, lowerInterval);
 }
 
 onMounted(async () => {
-  // Initial data load on mount
   await initData(marketStore.currentSymbol, interval.value);
-  
-  // Connect all-symbol ticker stream
   marketStore.connectTickers();
 });
 
