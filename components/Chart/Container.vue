@@ -4,25 +4,7 @@
     <div
       class="flex items-center justify-between border-b border-border-color px-4 py-2"
     >
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2 text-sm">
-          <button
-            v-for="tab in chartTabs"
-            :key="tab"
-            @click="activeChartTab = tab"
-            class="px-3 py-1 rounded transition-colors"
-            :class="
-              activeChartTab === tab
-                ? 'bg-bg-hover text-text-primary'
-                : 'text-text-secondary hover:text-text-primary'
-            "
-          >
-            {{ tab }}
-          </button>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" v-if="activeChartTab === 'Original'">
         <!-- Time Intervals -->
         <div class="flex items-center gap-1 text-xs">
           <span class="text-text-secondary">Time</span>
@@ -60,6 +42,25 @@
           </button>
           <button class="hover:text-text-primary p-1">
             <Maximize2 :size="16" />
+          </button>
+        </div>
+      </div>
+      <div></div>
+
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm">
+          <button
+            v-for="tab in chartTabs"
+            :key="tab"
+            @click="activeChartTab = tab"
+            class="px-3 py-1 rounded transition-colors"
+            :class="
+              activeChartTab === tab
+                ? 'bg-bg-hover text-text-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            "
+          >
+            {{ tab }}
           </button>
         </div>
       </div>
@@ -146,8 +147,6 @@ const marketStore = useMarketStore();
 const { interval: selectedInterval } = storeToRefs(marketStore);
 const ma = computed(() => marketStore.movingAverages);
 const stats = computed(() => marketStore.chartStats);
-
-
 
 const chartTabs = ["Original", "Trading View", "Depth"];
 const activeChartTab = ref("Original");
