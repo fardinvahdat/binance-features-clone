@@ -43,6 +43,11 @@
           <InfoWrapper class="flex-1" />
         </div>
 
+        <!-- Trading Data Tab -->
+        <div class="flex-1 flex" v-if="selectedType == 'Trading Data'">
+          <TradingDataWrapper class="flex-1" />
+        </div>
+
         <!-- Bottom Panels (Positions, Orders, etc.) -->
         <div class="h-64 border-t border-border-color">
           <TradingPositionsPanel />
@@ -113,6 +118,7 @@ const {
   fetchLeverageTiers,
   fetchOpenInterest,
   fetchTakerVolume,
+  fetchTradingDataHistory
 } = useBinanceInfo();
 const marketStore = useMarketStore();
 const { interval } = storeToRefs(marketStore);
@@ -128,10 +134,11 @@ const initData = async (symbol: string, interval: string) => {
 
   // 2. Fetch static/info data
   await fetchExchangeInfo(symbol);
-  await fetchFundingRateHistory(symbol); // <-- Fetch historical funding data
+  await fetchFundingRateHistory(symbol); 
   await fetchLeverageTiers(symbol);
   await fetchOpenInterest(symbol);
   await fetchTakerVolume(symbol);
+  await fetchTradingDataHistory(symbol);
 
   // 3. Connect to WebSocket
   connect(lowerSymbol, lowerInterval);

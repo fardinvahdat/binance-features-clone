@@ -86,6 +86,12 @@ export interface TakerVolume {
   timestamp: number;
 }
 
+export interface ChartDataPoint {
+  time: number; // Timestamp
+  value: number;
+  value2?: number;
+}
+
 export const useMarketStore = defineStore("market", {
   state: () => ({
     currentSymbol: "BTCUSDT",
@@ -120,6 +126,13 @@ export const useMarketStore = defineStore("market", {
       sellVolume: 0,
       timestamp: 0,
     } as TakerVolume, // NEW
+
+    oiData: [] as ChartDataPoint[], // 1. Open Interest
+    topAccountRatioData: [] as ChartDataPoint[], // 2. Top Trader (Accounts)
+    topPositionRatioData: [] as ChartDataPoint[], // 3. Top Trader (Positions)
+    allTraderRatioData: [] as ChartDataPoint[], // 4. Long/Short Ratio
+    takerVolData: [] as ChartDataPoint[], // 5. Taker Buy/Sell Volume (already exists, but structure needs to change for the chart)
+    basisData: [] as ChartDataPoint[], // 6. Basis
   }),
 
   getters: {
@@ -304,6 +317,25 @@ export const useMarketStore = defineStore("market", {
 
     setTakerVolumeData(data: TakerVolume) {
       this.takerVolumeData = data;
+    },
+
+    setOiData(data: ChartDataPoint[]) {
+      this.oiData = data;
+    },
+    setTopAccountRatioData(data: ChartDataPoint[]) {
+      this.topAccountRatioData = data;
+    },
+    setTopPositionRatioData(data: ChartDataPoint[]) {
+      this.topPositionRatioData = data;
+    },
+    setAllTraderRatioData(data: ChartDataPoint[]) {
+      this.allTraderRatioData = data;
+    },
+    setTakerVolData(data: ChartDataPoint[]) {
+      this.takerVolData = data;
+    },
+    setBasisData(data: ChartDataPoint[]) {
+      this.basisData = data;
     },
   },
 });

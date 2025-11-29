@@ -5,6 +5,7 @@ import {
   LeverageBracket,
   OpenInterest,
   TakerVolume,
+  ChartDataPoint,
 } from "~/stores/market";
 
 // Function to safely extract symbol trading rules from Binance exchangeInfo
@@ -61,6 +62,8 @@ const extractTradingRules = (
 
 export const useBinanceInfo = () => {
   const marketStore = useMarketStore();
+  const PERIOD = "5m"; // Use 5-minute interval as seen in the screenshot
+  const LIMIT = 100; // Keep limit reasonable for testing
 
   const fetchExchangeInfo = async (symbol: string) => {
     try {
@@ -174,11 +177,124 @@ export const useBinanceInfo = () => {
     }
   };
 
+  const fetchTradingDataHistory = async (symbol: string) => {
+    try {
+      await Promise.all([
+        // 1. Open Interest Statistics
+        fetchAndProcess(
+          `/api/trading-data/oi-hist?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data.map((d) => ({
+              time: d.timestamp,
+              value: parseFloat(d.sumOpenInterestValue), // National Value (USD/USDT) for the line chart
+              value2: parseFloat(d.sumOpenInterest), // Open Interest (Contracts) for the bar chart
+            })),
+          marketStore.setOiData
+        ),
+
+        // 2. Top Trader Long/Short Ratio (Accounts)
+        fetchAndProcess(
+          `/api/trading-data/top-account-ratio?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data.map((d) => ({
+              time: d.timestamp,
+              value: parseFloat(d.longShortRatio),
+            })),
+          marketStore.setTopAccountRatioData
+        ),
+
+        // 3. Top Trader Long/Short Ratio (Positions)
+        fetchAndProcess(
+          `/api/trading-data/top-position-ratio?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data.map((d) => ({
+              time: d.timestamp,
+              value: parseFloat(d.longShortRatio),
+            })),
+          marketStore.setTopPositionRatioData
+        ),
+
+        // 4. Long/Short Ratio (All Traders)
+        fetchAndProcess(
+          `/api/trading-data/all-ratio?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data.map((d) => ({
+              time: d.timestamp,
+              value: parseFloat(d.longShortRatio),
+            })),
+          marketStore.setAllTraderRatioData
+        ),
+
+        // 5. Taker Buy/Sell Volume
+        fetchAndProcess(
+          `/api/trading-data/taker-volume-hist?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data.map((d) => ({
+              time: d.timestamp,
+              value: parseFloat(d.takerBuyVol), // Volume for bar chart 1
+              value2: parseFloat(d.takerSellVol), // Volume for bar chart 2
+            })),
+          marketStore.setTakerVolData
+        ),
+
+        // 6. Basis (Requires futures Klines and Index Price Klines - Using a dedicated endpoint for Basis)
+        fetchAndProcess(
+          `/api/trading-data/basis?symbol=${symbol}&period=${PERIOD}&limit=${LIMIT}`,
+          (data: any[]) =>
+            data
+              .map((d) => ({
+                time: d.timestamp,
+                value: parseFloat(d.indexPrice), // Index Price
+                value2: parseFloat(d.basis), // Basis
+              }))
+              .filter((_, i) => i % 2 === 0), // Basis endpoint is heavy, filter data points
+          marketStore.setBasisData
+        ),
+      ]);
+      console.log("All Trading Data history fetched successfully.");
+    } catch (error) {
+      console.error("Error fetching trading data history:", error);
+    }
+  };
+
+  // Helper function for fetching and processing
+  const fetchAndProcess = async (
+    url: string,
+    processor: (data: any[]) => ChartDataPoint[],
+    setter: (data: ChartDataPoint[]) => void
+  ) => {
+    try {
+      const data: any = await $fetch(url);
+
+      // CRITICAL FIX: Check if the response is a valid array of historical points
+      if (!Array.isArray(data) || data.length === 0) {
+        // Log a warning if the API returned an unexpected or empty structure
+        console.warn(
+          `[Data Check] API returned invalid/empty data for ${url.split("?")[0]}. Raw response:`,
+          data
+        );
+        setter([]);
+        return;
+      }
+
+      // Binance returns newest data first, reverse it for chart display
+      setter(processor(data).reverse());
+    } catch (error: any) {
+      console.error(
+        `[Fetch Error] Failed to fetch ${url.split("?")[0]}:`,
+        error.data || error.message
+      );
+      // Ensure the store is cleared on fetch failure to prevent rendering issues
+      setter([]);
+    }
+  };
+
   return {
     fetchExchangeInfo,
     fetchFundingRateHistory,
     fetchLeverageTiers,
     fetchOpenInterest,
     fetchTakerVolume,
+    fetchTradingDataHistory,
   };
 };
