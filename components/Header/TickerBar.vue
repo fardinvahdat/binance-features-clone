@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-bg-panel px-4 py-1 overflow-x-auto my-2">
+  <div class="bg-bg-panel px-4 py-1 overflow-x-auto my-2 min-h-fit">
     <div class="flex items-center gap-6 text-xs whitespace-nowrap">
       <div
         v-for="(ticker, index) in tickers"

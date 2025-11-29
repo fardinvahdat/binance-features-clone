@@ -1,17 +1,17 @@
 <template>
   <div class="h-full flex flex-col bg-bg-panel text-text-primary">
     <div
-      class="flex items-center border-b border-border-color overflow-x-auto text-base"
+      class="flex items-center border-b border-border-color overflow-x-auto text-base p-2"
     >
       <button
         v-for="tab in infoTabs"
         :key="tab.key"
         @click="selectedTab = tab.key"
-        class="px-4 py-2 font-medium text-sm border-b-2 transition-colors"
+        class="px-3 py-1 rounded transition-colors text-xs"
         :class="
           selectedTab === tab.key
-            ? 'border-binance-yellow text-text-primary'
-            : 'border-transparent text-text-secondary hover:text-text-primary'
+            ? 'bg-bg-hover text-text-primary'
+            : 'text-text-secondary hover:text-text-primary'
         "
       >
         {{ tab.label }}
@@ -19,17 +19,23 @@
     </div>
 
     <div class="flex-1 overflow-y-auto p-4">
-      <div v-if="selectedTab === 'coinInfo'">
-        <p class="text-text-secondary">Coin Info Panel content goes here.</p>
-        </div>
+      <div
+        v-if="selectedTab === 'coinInfo'"
+        class="h-full w-full flex items-center justify-center"
+      >
+        it required api key from binance to work with! (i can't log-in)
+      </div>
       <div v-else-if="selectedTab === 'tradingRules'">
-        <TradingDataTradingRulesPanel />
-        </div>
-      <div v-else-if="selectedTab === 'leverageMargin'">
-        <p class="text-text-secondary">Leverage & Margin Panel content goes here.</p>
-        </div>
+        <InfoTradingRules />
+      </div>
+      <div
+        v-else-if="selectedTab === 'leverageMargin'"
+        class="h-full w-full flex items-center justify-center"
+      >
+        it required api key from binance to work with! (i can't log-in)
+      </div>
       <div v-else-if="selectedTab === 'fundingHistory'">
-        <TradingDataFundingHistoryPanel />
+        <InfoFundingHistory />
       </div>
     </div>
   </div>

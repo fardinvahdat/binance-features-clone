@@ -67,6 +67,25 @@ export interface FundingHistoryItem {
   markPrice: number;
 }
 
+export interface LeverageBracket {
+  bracket: number;
+  initialLeverage: number;
+  notionalCap: number;
+  notionalFloor: number;
+  maintMarginRatio: number;
+}
+
+export interface OpenInterest {
+  openInterest: number; // The current open interest value
+  timestamp: number;
+}
+
+export interface TakerVolume {
+  buyVolume: number;
+  sellVolume: number;
+  timestamp: number;
+}
+
 export const useMarketStore = defineStore("market", {
   state: () => ({
     currentSymbol: "BTCUSDT",
@@ -93,8 +112,14 @@ export const useMarketStore = defineStore("market", {
     >,
     fundingHistory: [] as FundingHistoryItem[],
     tradingRules: null as TradingRules | null,
-    leverageTiers: [] as any[], // For Leverage & Margin data
+    leverageTiers: [] as LeverageBracket[],
     coinInfo: null as any, // For Coin Info data
+    openInterestData: { openInterest: 0, timestamp: 0 } as OpenInterest, // NEW
+    takerVolumeData: {
+      buyVolume: 0,
+      sellVolume: 0,
+      timestamp: 0,
+    } as TakerVolume, // NEW
   }),
 
   getters: {
@@ -267,6 +292,18 @@ export const useMarketStore = defineStore("market", {
 
     setFundingHistory(history: FundingHistoryItem[]) {
       this.fundingHistory = history;
+    },
+
+    setLeverageTiers(tiers: LeverageBracket[]) {
+      this.leverageTiers = tiers;
+    },
+
+    setOpenInterestData(data: OpenInterest) {
+      this.openInterestData = data;
+    },
+
+    setTakerVolumeData(data: TakerVolume) {
+      this.takerVolumeData = data;
     },
   },
 });

@@ -16,7 +16,7 @@
         <!-- Tabs -->
 
         <div
-          class="flex items-center border-b border-border-color overflow-x-auto text-base"
+          class="flex items-center border-b border-border-color overflow-x-auto text-base min-h-fit"
         >
           <button
             v-for="type in types"
@@ -34,13 +34,13 @@
         </div>
 
         <!-- Chart Area -->
-        <div class="flex-1 flex" v-if="selectedType=='Chart'">
-          <ChartContainer class="flex-1" />
+        <div class="flex-1 flex" v-if="selectedType == 'Chart'">
+          <ChartWrapper class="flex-1" />
         </div>
 
-        <!-- Chart Area -->
-        <div class="flex-1 flex" v-if="selectedType=='Info'">
-          <TradingDataInfoPanel class="flex-1" />
+        <!-- Info Tab -->
+        <div class="flex-1 flex" v-if="selectedType == 'Info'">
+          <InfoWrapper class="flex-1" />
         </div>
 
         <!-- Bottom Panels (Positions, Orders, etc.) -->
@@ -103,11 +103,17 @@
 import { storeToRefs } from "pinia";
 import { onMounted, onUnmounted, watch } from "vue";
 import { useBinanceStream } from "~/composables/useBinanceStream";
-import { useBinanceInfo } from "~/composables/useBinanceInfo"; // <-- New Import
+import { useBinanceInfo } from "~/composables/useBinanceInfo";
 import { useMarketStore } from "~/stores/market";
 
 const { connect, disconnect, fetchInitialKlines } = useBinanceStream();
-const { fetchExchangeInfo, fetchFundingRateHistory } = useBinanceInfo();
+const {
+  fetchExchangeInfo,
+  fetchFundingRateHistory,
+  fetchLeverageTiers,
+  fetchOpenInterest,
+  fetchTakerVolume,
+} = useBinanceInfo();
 const marketStore = useMarketStore();
 const { interval } = storeToRefs(marketStore);
 const types = ["Chart", "Info", "Trading Data"];
@@ -116,17 +122,20 @@ const selectedType = ref("Chart");
 const initData = async (symbol: string, interval: string) => {
   const lowerSymbol = symbol.toLowerCase();
   const lowerInterval = interval.toLowerCase();
-  
+
   // 1. Fetch historical klines
   await fetchInitialKlines(lowerSymbol, lowerInterval);
-  
+
   // 2. Fetch static/info data
   await fetchExchangeInfo(symbol);
   await fetchFundingRateHistory(symbol); // <-- Fetch historical funding data
+  await fetchLeverageTiers(symbol);
+  await fetchOpenInterest(symbol);
+  await fetchTakerVolume(symbol);
 
   // 3. Connect to WebSocket
   connect(lowerSymbol, lowerInterval);
-}
+};
 
 onMounted(async () => {
   await initData(marketStore.currentSymbol, interval.value);

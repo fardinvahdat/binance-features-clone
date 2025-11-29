@@ -2,6 +2,9 @@ import {
   useMarketStore,
   TradingRules,
   FundingHistoryItem,
+  LeverageBracket,
+  OpenInterest,
+  TakerVolume,
 } from "~/stores/market";
 
 // Function to safely extract symbol trading rules from Binance exchangeInfo
@@ -106,8 +109,76 @@ export const useBinanceInfo = () => {
       marketStore.setFundingHistory([]);
     }
   };
+
+  const fetchLeverageTiers = async (symbol: string) => {
+    try {
+      // NOTE: We rely on a proxy route: /api/leverage-bracket
+      const proxyUrl = `/api/leverage-bracket?symbol=${symbol}`;
+
+      const response = await $fetch<any[]>(proxyUrl);
+
+      // Response is an array of objects, each containing a 'brackets' array
+      const symbolData = response.find(
+        (data) => data.symbol === symbol.toUpperCase()
+      );
+
+      if (symbolData && symbolData.brackets) {
+        const tiers: LeverageBracket[] = symbolData.brackets.map((b: any) => ({
+          bracket: b.bracket,
+          initialLeverage: b.initialLeverage,
+          notionalCap: parseFloat(b.notionalCap),
+          notionalFloor: parseFloat(b.notionalFloor),
+          maintMarginRatio: parseFloat(b.maintMarginRatio),
+        }));
+        marketStore.setLeverageTiers(tiers);
+      } else {
+        marketStore.setLeverageTiers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching leverage tiers:", error);
+      marketStore.setLeverageTiers([]);
+    }
+  };
+
+  const fetchOpenInterest = async (symbol: string) => {
+    try {
+      const proxyUrl = `/api/open-interest?symbol=${symbol}`; // NEW PROXY
+
+      const response = await $fetch<any>(proxyUrl); // This endpoint returns a single object
+
+      marketStore.setOpenInterestData({
+        openInterest: parseFloat(response.openInterest),
+        timestamp: response.timestamp,
+      });
+    } catch (error) {
+      console.error("Error fetching open interest:", error);
+    }
+  };
+
+  const fetchTakerVolume = async (symbol: string) => {
+    try {
+      const proxyUrl = `/api/taker-volume?symbol=${symbol}`; // NEW PROXY
+
+      const response = await $fetch<any[]>(proxyUrl); // This endpoint returns an array
+
+      // We only need the latest (last element)
+      const latest = response[response.length - 1];
+
+      marketStore.setTakerVolumeData({
+        buyVolume: parseFloat(latest.buySellRatio), // Note: This API returns a ratio
+        sellVolume: parseFloat(latest.takerSellVolume),
+        timestamp: latest.timestamp,
+      });
+    } catch (error) {
+      console.error("Error fetching taker volume:", error);
+    }
+  };
+
   return {
     fetchExchangeInfo,
     fetchFundingRateHistory,
+    fetchLeverageTiers,
+    fetchOpenInterest,
+    fetchTakerVolume,
   };
 };
