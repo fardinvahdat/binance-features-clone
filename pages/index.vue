@@ -85,14 +85,6 @@
     <div class="bg-bg-panel border-t border-border-color px-4 py-2 text-xs">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4 text-text-secondary">
-          <button class="hover:text-text-primary">Stable connection</button>
-          <span>ZENIUSDT -11.08% 617.07</span>
-          <span>ZECUSDT -2.80% 61.70</span>
-          <span>DASHUSDT -6.63% 35.30</span>
-          <span>CROSSUSDT -25.38% 0.10163</span>
-          <span>PIERUSDT</span>
-        </div>
-        <div class="flex items-center gap-4 text-text-secondary">
           <button class="hover:text-text-primary">Campaign Center</button>
           <button class="hover:text-text-primary">Announcements</button>
           <button class="hover:text-text-primary">Disclaimer</button>
@@ -118,7 +110,7 @@ const {
   fetchLeverageTiers,
   fetchOpenInterest,
   fetchTakerVolume,
-  fetchTradingDataHistory
+  fetchTradingDataHistory,
 } = useBinanceInfo();
 const marketStore = useMarketStore();
 const { interval } = storeToRefs(marketStore);
@@ -134,7 +126,7 @@ const initData = async (symbol: string, interval: string) => {
 
   // 2. Fetch static/info data
   await fetchExchangeInfo(symbol);
-  await fetchFundingRateHistory(symbol); 
+  await fetchFundingRateHistory(symbol);
   await fetchLeverageTiers(symbol);
   await fetchOpenInterest(symbol);
   await fetchTakerVolume(symbol);
